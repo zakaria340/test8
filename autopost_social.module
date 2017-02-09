@@ -1,0 +1,243 @@
+<?php
+/**
+ * @file
+ * Module file for autopost_social.
+ */
+
+
+use \Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use \Drupal\Core\Entity\EntityInterface;
+use \Drupal\Core\Form\FormStateInterface;
+use \Drupal\node\NodeInterface;
+use \Drupal\Core\Routing\RouteMatchInterface;
+
+use Drupal\Core\Breadcrumb\Breadcrumb;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Menu\MenuLinkInterface;
+use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Drupal\node\NodeTypeInterface;
+use Drupal\system\Entity\Menu;
+use Drupal\autopost_social\Entity\Autopostsocial;
+
+
+/**
+ * Implements hook_form_FORM_ID_alter() for \Drupal\node\NodeTypeForm.
+ *
+ * Adds menu options to the node type form.
+ *
+ * @see NodeTypeForm::form()
+ * @see menu_ui_form_node_type_form_submit()
+ */
+function autopost_social_form_node_type_form_alter(&$form,
+  FormStateInterface $form_state
+) {
+  /** @var \Drupal\Core\Menu\MenuParentFormSelectorInterface $menu_parent_selector */
+  $menu_options = autopost_social_get_providers();
+  /** @var \Drupal\node\NodeTypeInterface $type */
+  $type = $form_state->getFormObject()->getEntity();
+  $form['autopost_social'] = array(
+    '#type'     => 'details',
+    '#title'    => t('Autopost Social settings'),
+    '#attached' => array(
+      'library' => array('menu_ui/drupal.menu_ui.admin'),
+    ),
+    '#group'    => 'additional_settings',
+  );
+  $form['autopost_social']['autopost_social_options'] = array(
+    '#type'          => 'checkboxes',
+    '#title'         => t('Enable Autopost Social'),
+    '#default_value' => $type->getThirdPartySetting(
+      'autopost_social', 'autopost_social_config', array()
+    ),
+    '#options'       => $menu_options,
+    '#description'   => t(
+      'You can override theses options when you add/edit a content.'
+    ),
+  );
+  $form['#validate'][] = 'autopost_social_form_node_type_form_validate';
+  $form['#entity_builders'][] = 'autopost_social_form_node_type_form_builder';
+}
+
+/**
+ * Validate handler for forms with menu options.
+ *
+ * @see autopost_social_form_node_type_form_alter()
+ */
+function autopost_social_form_node_type_form_validate(&$form,
+  FormStateInterface $form_state
+) {
+}
+
+/**
+ * Entity builder for the node type form with menu options.
+ *
+ * @see autopost_social_form_node_type_form_alter()
+ */
+function autopost_social_form_node_type_form_builder($entity_type,
+  NodeTypeInterface $type, &$form, FormStateInterface $form_state
+) {
+  $type->setThirdPartySetting(
+    'autopost_social', 'autopost_social_config',
+    array_filter($form_state->getValue('autopost_social_options'))
+  );
+}
+
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for \Drupal\node\NodeForm.
+ *
+ * Adds menu item fields to the node form.
+ *
+ * @see menu_ui_form_node_form_submit()
+ */
+function autopost_social_form_node_form_alter(&$form,
+  FormStateInterface $form_state
+) {
+  // Generate a list of possible parents (not including this link or descendants).
+  // @todo This must be handled in a #process handler.
+  $node = $form_state->getFormObject()->getEntity();
+
+  $defaults = autopost_social_get_defaults($node);
+  $options = autopost_social_get_providers();
+  /** @var \Drupal\node\NodeTypeInterface $node_type */
+  $node_type = $node->type->entity;
+  $options_autopost = $node_type->getThirdPartySetting(
+    'autopost_social', 'autopost_social_config', array()
+  );
+  if (empty($options_autopost)) {
+    return;
+  }
+  $form['autopost_social'] = array(
+    '#type'       => 'details',
+    '#title'      => t('Autopost social settings'),
+    '#access'     => \Drupal::currentUser()->hasPermission('administer menu'),
+    '#open'       => FALSE,
+    '#group'      => 'advanced',
+    '#attached'   => array(
+      'library' => array('menu_ui/drupal.menu_ui'),
+    ),
+    '#tree'       => TRUE,
+    '#weight'     => -2,
+    '#attributes' => array('class' => array('menu-link-form')),
+  );
+  $form['autopost_social']['autopost_social_options'] = array(
+    '#type'          => 'checkboxes',
+    '#default_value' => $defaults,
+    '#options'       => $options,
+  );
+
+  foreach (array_keys($form['actions']) as $action) {
+    if ($action != 'preview' && isset($form['actions'][$action]['#type'])
+      && $form['actions'][$action]['#type'] === 'submit'
+    ) {
+      $form['actions'][$action]['#submit'][]
+        = 'autopost_social_form_node_form_submit';
+    }
+  }
+}
+
+/**
+ * Form submission handler for menu item field on the node form.
+ *
+ * @see menu_ui_form_node_form_alter()
+ */
+function autopost_social_form_node_form_submit($form,
+  FormStateInterface $form_state
+) {
+  $node = $form_state->getFormObject()->getEntity();
+  if (!$form_state->isValueEmpty('autopost_social')) {
+    $values = $form_state->getValue('autopost_social');
+    if (empty($values)) {
+      if ($values['entity_id']) {
+        $entity = Autopostsocial::load($values['entity_id']);
+        $entity->delete();
+      }
+    }
+    else {
+      _autopost_social_node_save($node, $values);
+    }
+  }
+}
+
+/**
+ * Helper function to create or update a menu link for a node.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ *   Node entity.
+ * @param array                      $values
+ *   Values for the menu link.
+ */
+function _autopost_social_node_save(NodeInterface $node, array $values) {
+  /** @var \Drupal\menu_link_content\MenuLinkContentInterface $entity */
+  $entity = Autopostsocial::load($node->id());
+  if (!empty($entity)) {
+    $entity->providers = json_encode(array_filter($values['autopost_social_options']));
+  }
+  else {
+    // Create a new menu_link_content entity.
+    $entity = Autopostsocial::create(
+      array(
+        'id'        => $node->id(),
+        'nid'       => $node->id(),
+        'providers' => json_encode(
+          array_filter($values['autopost_social_options'])
+        ),
+        'status'    => '0',
+      )
+    );
+  }
+  $entity->save();
+
+
+
+
+
+
+
+
+
+
+  $service_autopost = Drupal::service('autopost_social.socialpost');
+
+  if(!empty($entity->providers) && $entity->status == 0) {
+    $service_autopost->post(array('facebook'), $node);
+  }
+
+}
+
+/**
+ * @param \Drupal\node\NodeInterface $node
+ *
+ * @return array|mixed
+ */
+function autopost_social_get_defaults(NodeInterface $node) {
+  if (!is_null($node->id())) {
+    $entity = Autopostsocial::load($node->id());
+    if (!is_null($entity)) {
+      return json_decode($entity->providers, TRUE);
+    }
+  }
+  return array();
+}
+
+/**
+ * Return an associative array of Providers Autopost.
+ *
+ * @param bool $all
+ *   (optional) If FALSE return only user-added menus, or if TRUE also include
+ *   the menus defined by the system. Defaults to TRUE.
+ *
+ * @return array
+ *   An array with the machine-readable names as the keys, and human-readable
+ *   titles as the values.
+ */
+function autopost_social_get_providers($all = TRUE) {
+
+  $options = array(
+    'facebook'    => t('Facebook'),
+    'twitter' => t('Twitter'),
+  );
+  return $options;
+}

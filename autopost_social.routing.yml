@@ -1,0 +1,15 @@
+autopost_social.description:
+  path: '/autopost-social'
+  defaults:
+    _controller: '\Drupal\autopost_social\Controller\AutoPostSocialController::description'
+    _title: 'AutopostSocial'
+  requirements:
+    _permission: 'access content'
+
+autopost_social.settings:
+  path: '/admin/structure/autopost-social/settings'
+  defaults:
+    _form: '\Drupal\autopost_social\Form\AutoPostSettingsForm'
+    _title: 'Autopost social setting'
+  requirements:
+    _permission: 'administer site configuration'

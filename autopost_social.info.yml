@@ -1,0 +1,9 @@
+name: Autopost Social
+type: module
+description: Autopost Social Modules (facebook, twitter, linkedin ...)
+package: Media
+
+
+configure: autopost_social.settings
+
+core: '8.x'

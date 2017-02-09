@@ -1,0 +1,23 @@
+{
+  "name": "drupal/AUTOPOST_SOCIAL",
+  "description": "Autopost social.",
+  "type": "drupal-module",
+  "homepage": "https://drupal.org/project/autopost_social",
+  "authors": [
+    {
+      "name": "Zakaria Elhariri",
+      "homepage": "https://www.drupal.org/u/mpdonadio",
+      "role": "Creator"
+    }
+  ],
+  "support": {
+    "issues": "https://drupal.org/project/autopost_social",
+    "irc": "irc://irc.freenode.org/drupal-contribute",
+    "source": "https://cgit.drupalcode.org/autopost_social"
+  },
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require": {
+    "facebook/graph-sdk": "~2.8"
+  }
+}

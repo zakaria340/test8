@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * @file
+ * Install and uninstall functions for the tablesort_example module.
+ *
+ * This file contains the functions required to perform install and
+ * uninstall operations.
+ */

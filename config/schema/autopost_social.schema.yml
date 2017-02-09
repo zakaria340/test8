@@ -1,0 +1,48 @@
+# Schema for configuration files of the Menu UI module.
+
+autopost_social.settings:
+  type: config_object
+  label: 'AutopostSocial settings'
+  mapping:
+    override_parent_selector:
+      type: boolean
+      label: 'Override parent selector'
+
+node.type.*.third_party.autopost_social:
+  type: mapping
+  label: 'Per-content type autopost settings'
+  mapping:
+    autopost_social_config:
+      type: sequence
+      label: 'AutopostSocial settings'
+      sequence:
+       type: string
+       label: 'Menu machine name'
+
+autopost_social.autopostsocial.*:
+  type: mapping
+  label: 'AutopostSocial'
+  mapping:
+    id:
+      type: string
+      label: 'Autopost id'
+    nid:
+      type: string
+      label: 'Nid'
+    providers:
+      type: string
+      label: 'Providers'
+    status:
+          type: string
+          label: 'Status'
+  type: config_object
+
+
+
+autopost_social.config:
+  type: config_object
+  label: 'Example config'
+  mapping:
+    message:
+      type: text
+      label: 'Message'
