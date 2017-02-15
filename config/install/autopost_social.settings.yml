@@ -1,5 +1,11 @@
-allowed_types:
-  - book
+providers:
+  facebook:
+    label: Facebook
+    class: Drupal\autopost_social\Providers\Socialpost\FacebookSocialPost\FacebookSocialPost
+  twitter:
+      label: Twitter
+      class: Drupal\autopost_social\Providers\Socialpost\TwitterSocialPost\TwitterSocialPost
+
 block:
   navigation:
     mode: 'all pages'

@@ -4,8 +4,6 @@ namespace Drupal\autopost_social;
 
 use \Drupal\node\NodeInterface;
 
-use Drupal\autopost_social\Providers\Socialpost\FacebookSocialPost;
-
 
 /**
  * A base class to help developers implement their own sandwich plugins.
@@ -37,10 +35,12 @@ class SocialPostFactory {
    */
 
   public static function create($provider) {
-    $socialpost = NULL;
-    if($provider == 'facebook') {
-      $socialpost = new FacebookSocialPost();
+    $providers = \Drupal::config('autopost_social.settings')->get('providers');
+    if(isset($providers[$provider])) {
+      $class = $providers[$provider]['class'];
+      $socialpost = new $class;
+      return $socialpost;
     }
-    return $socialpost;
+    return NULL;
   }
 }

@@ -1,12 +1,15 @@
 # Schema for configuration files of the Menu UI module.
 
-autopost_social.settings:
-  type: config_object
+autopost_social.settings.*:
+  type: mapping
   label: 'AutopostSocial settings'
   mapping:
-    override_parent_selector:
-      type: boolean
-      label: 'Override parent selector'
+    provider_facebook:
+      type: config_object
+    provider_twitter:
+      type: config_object
+  type: config_object
+
 
 node.type.*.third_party.autopost_social:
   type: mapping

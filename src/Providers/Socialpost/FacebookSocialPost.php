@@ -18,42 +18,54 @@ class FacebookSocialPost extends SocialPostBase {
 
 
   /**
+   * FacebookSocialPost constructor.
+   */
+  public function __construct() {
+    $config = $this->config('autopost_social.settings');
+    $valuesFacebook = $config->get('provider_facebook');
+    if (!empty($valuesFacebook)) {
+      $this->setClientId($valuesFacebook['client_id']);
+      $this->setSecretId($valuesFacebook['secret_id']);
+      $this->setPageName($valuesFacebook['page_name']);
+      $this->setAccessToken($valuesFacebook['access_token']);
+    }
+  }
+
+  /**
    * @param \Drupal\node\NodeInterface $node
    */
   public function post(NodeInterface $node) {
 
     $appId = $this->getClientId();
     $appSecret = $this->getSecretId();
-    $pageId = 'watchmoviestv';
+    $pageId = $this->getPageName();
 
-    $userAccessToken = "EAAEP8bCKjkIBAEGSNZCCrOM9yXAS6KpYjysOn20Xr8euzZC9xdMP2wLIB8J4QDMzgmHY3bl79G8sPtgnr39zdpdyxUOdCZChZAGzlmegK9AnopVePblrpfV2niIQu8mGBUkqHhEHvhSZAdKD9pZBJDgA9ZAk0b2PxUycxcP2srYwjjpR9HS3ZBhRHK4sv7lZA42YZD";
-
-    $fb = new \Facebook\Facebook([
-      'app_id' => $appId,
-      'app_secret' => $appSecret,
-      'default_graph_version' => 'v2.5'
-    ]);
-
-    $longLivedToken = $fb->getOAuth2Client()->getLongLivedAccessToken($userAccessToken);
-
+    $userAccessToken = $this->getAccessToken();
+    $fb = new \Facebook\Facebook(
+      [
+        'app_id'                => $appId,
+        'app_secret'            => $appSecret,
+        'default_graph_version' => 'v2.5',
+      ]
+    );
+    $longLivedToken = $fb->getOAuth2Client()->getLongLivedAccessToken(
+      $userAccessToken
+    );
     $fb->setDefaultAccessToken($longLivedToken);
-
     $response = $fb->sendRequest('GET', $pageId, ['fields' => 'access_token'])
       ->getDecodedBody();
-
     $foreverPageAccessToken = $response['access_token'];
-    var_dump($foreverPageAccessToken);die;
 
     try {
-      $response = $fb->post( '/' . $this->getPageName() . '/feed/', array(
-        'message' => 'TEST ZAZAZA',
-      ));
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      // When Graph returns an error
+      $response = $fb->post(
+        '/' . $this->getPageName() . '/feed/', array(
+          'message' => $node->getTitle(),
+        )
+      );
+    } catch (\Facebook\Exceptions\FacebookResponseException $e) {
       echo 'Graph returned an error: ' . $e->getMessage();
       exit;
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
+    } catch (\Facebook\Exceptions\FacebookSDKException $e) {
       echo 'Facebook SDK returned an error: ' . $e->getMessage();
       exit;
     }
@@ -61,46 +73,43 @@ class FacebookSocialPost extends SocialPostBase {
 
 
   /**
-   * Place an order for a sandwich.
-   *
-   * This is just an example method on our plugin that we can call to get
-   * something back.
-   *
-   * @param array $extras
-   *   An array of extra ingredients to include with this sandwich.
-   *
-   * @return string
-   *   Description of the sandwich that was just ordered.
+   * @param $clientId
    */
   public function setClientId($clientId) {
-    // TODO: Implement setClientId() method.
+    $this->_clientId = $clientId;
   }
 
+  /**
+   * @return mixed
+   */
   public function getClientId() {
-    return "299005700116034";
+    return $this->_clientId;
   }
 
+  /**
+   * @param $pagename
+   */
   public function setPageName($pagename) {
-    // TODO: Implement setClientId() method.
+    $this->_pagename = $pagename;
   }
 
   public function getPageName() {
-    return "watchmoviestv";
+    return $this->_pagename;
   }
 
   public function setSecretId($secretId) {
-    // TODO: Implement setSecretId() method.
+    $this->_secret_id = $secretId;
   }
 
   public function getSecretId() {
-    return "a2ee76076962f502e2f889382e2e239d";
+    return $this->_secret_id;
   }
 
   public function setAccessToken($access_token) {
-    // TODO: Implement setAccessToken() method.
+    $this->access_token = $access_token;
   }
 
   public function getAccessToken() {
-    return "EAAEP8bCKjkIBABwjNc45Pd3rp50diDfRbMROLBUUix7bPkqdnGYxiMz2jUOEWnk33T3yHKqy4ZAZCZCRHefp7QYLTRf4BycG3o81VlarVakZA9R020in9CZCiQtcAKmZAkwhMwySLuTZALqtUfABMEvSZCeAHngmLW7QGyy6fZAD6252MPFSNzrSCctVpqVETMrsZD";
+    return $this->access_token;
   }
 }

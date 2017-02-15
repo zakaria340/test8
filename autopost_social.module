@@ -189,18 +189,7 @@ function _autopost_social_node_save(NodeInterface $node, array $values) {
     );
   }
   $entity->save();
-
-
-
-
-
-
-
-
-
-
   $service_autopost = Drupal::service('autopost_social.socialpost');
-
   if(!empty($entity->providers) && $entity->status == 0) {
     $service_autopost->post(array('facebook'), $node);
   }
@@ -234,10 +223,12 @@ function autopost_social_get_defaults(NodeInterface $node) {
  *   titles as the values.
  */
 function autopost_social_get_providers($all = TRUE) {
+  $options = [];
+  $providers = \Drupal::config('autopost_social.settings')->get('providers');
 
-  $options = array(
-    'facebook'    => t('Facebook'),
-    'twitter' => t('Twitter'),
-  );
+  foreach ($providers as $key => $value) {
+    $options[$key] = $value['label'];
+  }
+
   return $options;
 }

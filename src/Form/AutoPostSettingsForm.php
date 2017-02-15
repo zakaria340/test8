@@ -33,19 +33,42 @@ class AutoPostSettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('autopost_social.settings');
+    $providers = \Drupal::config('autopost_social.settings')->get('providers');
+    $form['#tree'] = TRUE;
+    foreach ($providers as $key => $provider) {
+      $form['provider_' . $key] = [
+        '#type'   => 'fieldset',
+        '#title'  => $provider['label'],
+        '#prefix' => '<div id="names-fieldset-wrapper">',
+        '#suffix' => '</div>',
+      ];
+      $default_values = $config->get('provider_' . $key);
+      $form['provider_' . $key]['client_id'] = array(
+        '#type'          => 'textfield',
+        '#title'         => $this->t('Client Id'),
+        '#default_value' => isset($default_values['client_id'])
+          ? $default_values['client_id'] : '',
+      );
 
-    $form['autopost_social_thing'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Things'),
-      '#default_value' => $config->get('things'),
-    );
-
-    $form['other_things'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Other things'),
-      '#default_value' => $config->get('other_things'),
-    );
-
+      $form['provider_' . $key]['secret_id'] = array(
+        '#type'          => 'textfield',
+        '#title'         => $this->t('Secret Id'),
+        '#default_value' => isset($default_values['secret_id'])
+          ? $default_values['secret_id'] : '',
+      );
+      $form['provider_' . $key]['page_name'] = array(
+        '#type'          => 'textfield',
+        '#title'         => $this->t('Machine Page Name'),
+        '#default_value' => isset($default_values['page_name'])
+          ? $default_values['page_name'] : '',
+      );
+      $form['provider_' . $key]['access_token'] = array(
+        '#type'          => 'textarea',
+        '#title'         => $this->t('Access token'),
+        '#default_value' => isset($default_values['access_token'])
+          ? $default_values['access_token'] : '',
+      );
+    }
     return parent::buildForm($form, $form_state);
   }
 
@@ -53,15 +76,12 @@ class AutoPostSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Retrieve the configuration
-    $this->config('autopost_social.settings')
-      // Set the submitted configuration setting
-      ->set('things', $form_state->getValue('autopost_social_thing'))
-      // You can set multiple configurations at once by making
-      // multiple calls to set()
-      ->set('other_things', $form_state->getValue('other_things'))
-      ->save();
-
+    $providers = \Drupal::config('autopost_social.settings')->get('providers');
+    foreach ($providers as $key => $provider) {
+      $this->config('autopost_social.settings')
+        ->set('provider_' . $key, $form_state->getValue('provider_' . $key))
+        ->save();
+    }
     parent::submitForm($form, $form_state);
   }
 }
