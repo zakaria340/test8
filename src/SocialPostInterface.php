@@ -37,5 +37,7 @@ interface SocialPostInterface {
 
 
   public function post(NodeInterface $node);
+  
+  public function generateAccessToken();
 
 }

@@ -13,3 +13,11 @@ autopost_social.settings:
     _title: 'Autopost social setting'
   requirements:
     _permission: 'administer site configuration'
+
+autopost_social.access_token:
+  path: '/admin/generate-access-token/{provider}'
+  defaults:
+    _controller: '\Drupal\autopost_social\Controller\GenerateAccessTokenController::generate'
+    _title: 'Generate access token'
+  requirements:
+    _permission: 'administer site configuration'

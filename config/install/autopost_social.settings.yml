@@ -1,10 +1,10 @@
 providers:
   facebook:
     label: Facebook
-    class: Drupal\autopost_social\Providers\Socialpost\FacebookSocialPost\FacebookSocialPost
+    class: Drupal\autopost_social\Providers\Socialpost\FacebookSocialPost
   twitter:
       label: Twitter
-      class: Drupal\autopost_social\Providers\Socialpost\TwitterSocialPost\TwitterSocialPost
+      class: Drupal\autopost_social\Providers\Socialpost\TwitterSocialPost
 
 block:
   navigation:

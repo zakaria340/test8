@@ -146,6 +146,7 @@ function autopost_social_form_node_form_alter(&$form,
 function autopost_social_form_node_form_submit($form,
   FormStateInterface $form_state
 ) {
+
   $node = $form_state->getFormObject()->getEntity();
   if (!$form_state->isValueEmpty('autopost_social')) {
     $values = $form_state->getValue('autopost_social');
@@ -173,7 +174,9 @@ function _autopost_social_node_save(NodeInterface $node, array $values) {
   /** @var \Drupal\menu_link_content\MenuLinkContentInterface $entity */
   $entity = Autopostsocial::load($node->id());
   if (!empty($entity)) {
-    $entity->providers = json_encode(array_filter($values['autopost_social_options']));
+    $entity->providers = json_encode(
+      array_filter($values['autopost_social_options'])
+    );
   }
   else {
     // Create a new menu_link_content entity.
@@ -189,8 +192,9 @@ function _autopost_social_node_save(NodeInterface $node, array $values) {
     );
   }
   $entity->save();
+
   $service_autopost = Drupal::service('autopost_social.socialpost');
-  if(!empty($entity->providers) && $entity->status == 0) {
+  if (!empty($entity->providers)) {
     $service_autopost->post(array('facebook'), $node);
   }
 

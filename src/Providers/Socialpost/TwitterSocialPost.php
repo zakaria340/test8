@@ -24,6 +24,9 @@ class TwitterSocialPost extends SocialPostBase {
 
   }
 
+  public function generateAccessToken() {
+
+  }
 
   /**
    * Place an order for a sandwich.
